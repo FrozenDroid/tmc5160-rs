@@ -612,7 +612,7 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
     pub fn get_velocity(&mut self) -> Result<f32, Error<E>> {
         self.read_register(Registers::VACTUAL).map(|val| {
             if (val.data & 0b1000000000000000000000000) == 0b1000000000000000000000000 {
-                ((8388607 - val.data as i32) as f64 / self._step_count as f64) as f32
+                ((8388607 - (val.data & 0b111111111111111111111111) as i32) as f64 / self._step_count as f64) as f32
             } else {
                 ((val.data as i32) as f64 / self._step_count as f64) as f32
             }
