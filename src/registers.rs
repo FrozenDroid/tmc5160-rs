@@ -1,4 +1,4 @@
-//! Registers of the TMC5160 
+//! Registers of the TMC5160
 extern crate modular_bitfield_to_value;
 
 use modular_bitfield::bitfield;
@@ -496,7 +496,7 @@ impl Default for ChopConf {
 #[bitfield(bits = 32)]
 #[derive(ToValue)]
 pub struct CoolConf {
-    pub semin: B4,
+    pub semin: B3,
     #[skip] _a: B1,
     pub seup: B2,
     #[skip] _b: B1,
@@ -504,7 +504,7 @@ pub struct CoolConf {
     #[skip] _c: B1,
     pub sedn: B2,
     pub seimin: bool,
-    pub sgt: B6,
+    pub sgt: B7,
     #[skip] _d: B1,
     pub sfilt: bool,
     #[skip] _e: B8,
