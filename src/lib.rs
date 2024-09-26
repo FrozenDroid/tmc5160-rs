@@ -102,10 +102,10 @@ pub struct Tmc5160<SPI, CS, EN> {
 }
 
 impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
-    where
-        SPI: Transfer<u8, Error=E> + Write<u8, Error=E>,
-        CS: OutputPin,
-        EN: OutputPin,
+where
+    SPI: Transfer<u8, Error = E> + Write<u8, Error = E>,
+    CS: OutputPin,
+    EN: OutputPin,
 {
     /// Create a new driver from a SPI peripheral and a NCS pin
     pub fn new(spi: SPI, cs: CS) -> Self {
@@ -171,8 +171,8 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
 
     /// read a specified register
     pub fn read_register<T>(&mut self, reg: T) -> Result<DataPacket, Error<E>>
-        where
-            T: Address + Copy,
+    where
+        T: Address + Copy,
     {
         // Process cmd to read, return previous (dummy) state
         let _dummy = self.read_io(reg)?;
@@ -181,8 +181,8 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
     }
 
     fn read_io<T>(&mut self, reg: T) -> Result<DataPacket, Error<E>>
-        where
-            T: Address + Copy,
+    where
+        T: Address + Copy,
     {
         self.cs.set_low().ok();
 
@@ -204,13 +204,17 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
             debug_val[i] = response[i];
         }
 
-        Ok(DataPacket { status: SpiStatus::from_bytes([response[0]]), data: u32::from_be_bytes(ret_val), debug: debug_val })
+        Ok(DataPacket {
+            status: SpiStatus::from_bytes([response[0]]),
+            data: u32::from_be_bytes(ret_val),
+            debug: debug_val,
+        })
     }
 
     /// write value to a specified register
     pub fn write_register<T>(&mut self, reg: T, val: &mut [u8; 4]) -> Result<DataPacket, Error<E>>
-        where
-            T: Address + Copy,
+    where
+        T: Address + Copy,
     {
         self.cs.set_low().ok();
 
@@ -228,7 +232,11 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
             ret_val[i] = response[i + 1];
         }
 
-        Ok(DataPacket { status: SpiStatus::from_bytes([response[0]]), data: u32::from_be_bytes(ret_val), debug: debug_val })
+        Ok(DataPacket {
+            status: SpiStatus::from_bytes([response[0]]),
+            data: u32::from_be_bytes(ret_val),
+            debug: debug_val,
+        })
     }
 
     /// read a specified register according to the old implementation
@@ -276,7 +284,13 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
     pub fn old_write_register(&mut self, register: u8, payload: &[u8; 4]) -> u8 {
         self.cs.set_low().ok();
         let mut status_byte = 0;
-        let mut buffer: [u8; 5] = [register | 0x80, payload[0], payload[1], payload[2], payload[3]];
+        let mut buffer: [u8; 5] = [
+            register | 0x80,
+            payload[0],
+            payload[1],
+            payload[2],
+            payload[3],
+        ];
         // usb_println(arrform!(64,"write buffer {:?}",buffer).as_str());
         match self.spi.transfer(&mut buffer) {
             Ok(r) => {
@@ -329,6 +343,12 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
         let mut value = 0b111_u32.to_be_bytes();
         //let mut value= (!0_u32).to_be_bytes();
         self.write_register(Registers::ENC_STATUS, &mut value)
+    }
+
+    /// write value to SW_MODE register
+    pub fn write_ramp_stat(&mut self, ramp_stat: RampStat) -> Result<DataPacket, Error<E>> {
+        let mut value = swap_bytes(ramp_stat.into_bytes());
+        self.write_register(Registers::RAMP_STAT, &mut value)
     }
 
     /// write value to SW_MODE register
@@ -459,12 +479,14 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
 
     /// read offset register
     pub fn read_offset(&mut self) -> Result<u32, Error<E>> {
-        self.read_register(Registers::OFFSET_READ).map(|packet| packet.data)
+        self.read_register(Registers::OFFSET_READ)
+            .map(|packet| packet.data)
     }
 
     /// read TSTEP register
     pub fn read_tstep(&mut self) -> Result<u32, Error<E>> {
-        self.read_register(Registers::TSTEP).map(|packet| packet.data)
+        self.read_register(Registers::TSTEP)
+            .map(|packet| packet.data)
     }
 
     /// read DRV_STATUS register
@@ -532,12 +554,14 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
 
     /// check if the motor has reached the target position
     pub fn position_is_reached(&mut self) -> Result<bool, Error<E>> {
-        self.read_ramp_status().map(|packet| packet.position_reached())
+        self.read_ramp_status()
+            .map(|packet| packet.position_reached())
     }
 
     /// check if the motor has reached the constant velocity
     pub fn velocity_is_reached(&mut self) -> Result<bool, Error<E>> {
-        self.read_ramp_status().map(|packet| packet.velocity_reached())
+        self.read_ramp_status()
+            .map(|packet| packet.velocity_reached())
     }
 
     /// check if motor is at right limit
@@ -593,12 +617,14 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
 
     /// get the latched position
     pub fn get_latched_position(&mut self) -> Result<f32, Error<E>> {
-        self.read_register(Registers::XLATCH).map(|val| (val.data as i32) as f32 / self._step_count)
+        self.read_register(Registers::XLATCH)
+            .map(|val| (val.data as i32) as f32 / self._step_count)
     }
 
     /// get the current position
     pub fn get_position(&mut self) -> Result<f32, Error<E>> {
-        self.read_register(Registers::XACTUAL).map(|val| (val.data as i32) as f32 / self._step_count)
+        self.read_register(Registers::XACTUAL)
+            .map(|val| (val.data as i32) as f32 / self._step_count)
     }
 
     /// set the current position
@@ -612,9 +638,12 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
     pub fn get_velocity(&mut self) -> Result<f32, Error<E>> {
         self.read_register(Registers::VACTUAL).map(|val| {
             if (val.data & 0b100000000000000000000000) == 0b100000000000000000000000 {
-                -((8388607 - (val.data & 0b11111111111111111111111) as i32) as f64 / self._step_count as f64 * (self._clock as f64 / 16_777_216.0)) as f32
+                -((8388607 - (val.data & 0b11111111111111111111111) as i32) as f64
+                    / self._step_count as f64
+                    * (self._clock as f64 / 16_777_216.0)) as f32
             } else {
-                ((val.data as i32) as f64 / self._step_count as f64 * (self._clock as f64 / 16_777_216.0)) as f32
+                ((val.data as i32) as f64 / self._step_count as f64
+                    * (self._clock as f64 / 16_777_216.0)) as f32
             }
         })
     }
@@ -626,6 +655,7 @@ impl<SPI, CS, EN, E> Tmc5160<SPI, CS, EN>
 
     /// get the current target position (XTARGET)
     pub fn get_target(&mut self) -> Result<f32, Error<E>> {
-        self.read_register(Registers::XTARGET).map(|val| (val.data as i32) as f32 / self._step_count)
+        self.read_register(Registers::XTARGET)
+            .map(|val| (val.data as i32) as f32 / self._step_count)
     }
 }
