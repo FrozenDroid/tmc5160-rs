@@ -496,7 +496,7 @@ impl Default for ChopConf {
 #[bitfield(bits = 32)]
 #[derive(ToValue)]
 pub struct CoolConf {
-    pub semin: B3,
+    pub semin: B4,
     #[skip] _a: B1,
     pub seup: B2,
     #[skip] _b: B1,
@@ -507,7 +507,7 @@ pub struct CoolConf {
     pub sgt: B7,
     #[skip] _d: B1,
     pub sfilt: bool,
-    #[skip] _e: B8,
+    #[skip] _e: B7,
 }
 
 /// PWMCONF Register
